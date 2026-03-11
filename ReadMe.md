@@ -1,6 +1,6 @@
 # SchemaScript
 
-**SchemaScript** is a data-centric ORM for declaratively defining database schemas with maximum type safety and constraint enforcement. Built as an abstraction over backends like Drizzle ORM, it offers a fluent API running securely within a sandboxed Rust runtime.
+**SchemaScript** is an *ECMAScript-based* **data-centric** ORM that lets you *declaratively* define database schemas with maximum type safety and constraint enforcement. It's built as an abstraction over low-level backends like Drizzle ORM, offering a fluent API running securely within a sandboxed Rust runtime.
 
 ---
 
@@ -13,9 +13,23 @@
 
 ---
 
-## Core API
+## Getting Started
 
-### Schema Definition & Table Generation
+### Installation
+
+Use your favorite pacakge manager and install `@artefacto/schemascript`:
+
+```
+
+npm install -d @artefacto/schemascript
+
+```
+
+---
+
+### Usage
+
+#### Schema Definition & Table Creation
 
 Schemas are defined using the `Schema` function, which creates a type-safe schema definition that can be used for type generation and validation:
 
@@ -65,6 +79,7 @@ All properties support the following modifiers through method chaining:
 - `.unique()`: Adds a unique constraint (mapped to a unique index in SQLite).
 - `.default(value)`: Sets a default value. Supports literals and SQL expressions like `value.now`.
 - `.references(ref, actions?)`: Creates a foreign key constraint.
+- `.array()`: Marks the column as an array.
 
 **Note**: All fields are **required** (non-nullable) by default. Use `.optional()` to allow null values.
 
