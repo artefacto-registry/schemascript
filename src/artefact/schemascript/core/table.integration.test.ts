@@ -110,3 +110,71 @@ describe("Default Modifier Integration", () => {
 		expect(columns.sql_def.default).toBeDefined();
 	});
 });
+
+describe("Array Modifier Integration", () => {
+	test("should correctly map all array primitive types to Drizzle columns", () => {
+		const MyTable = Table("array_integration", (prop) => ({
+			int_arr: prop.integer().array(),
+			real_arr: prop.real().array(),
+			text_arr: prop.text().array(),
+			bool_arr: prop.boolean().array(),
+			node_arr: prop.node().array(),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+
+		expect(columns.int_arr.dataType).toBe("json");
+		expect(columns.real_arr.dataType).toBe("json");
+		expect(columns.text_arr.dataType).toBe("json");
+		expect(columns.bool_arr.dataType).toBe("json");
+		expect(columns.node_arr.dataType).toBe("json");
+	});
+
+	test("should correctly map optional array types", () => {
+		const MyTable = Table("array_optional_integration", (prop) => ({
+			tags: prop.text().array().optional(),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string; notNull: boolean }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+
+		expect(columns.tags.dataType).toBe("json");
+		expect(columns.tags.notNull).toBe(false);
+	});
+
+	test("should correctly map array types with default values", () => {
+		const MyTable = Table("array_default_integration", (prop) => ({
+			tags: prop.text().array().default(["a", "b"]),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string; default: unknown }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+
+		expect(columns.tags.dataType).toBe("json");
+		expect(columns.tags.default).toEqual(["a", "b"]);
+	});
+
+	test("should correctly map enum array types", () => {
+		const MyTable = Table("array_enum_integration", (prop) => ({
+			roles: prop.enum({ options: ["ADMIN", "USER"] }).array(),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+
+		expect(columns.roles.dataType).toBe("json");
+	});
+});

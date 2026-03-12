@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { field } from "./field";
 import { Table } from "./table";
 
 describe("Table", () => {
@@ -74,6 +75,19 @@ describe("Table", () => {
 		expect(columns.enum_uniq.isUnique).toBe(true);
 	});
 
+	test("should handle array fields as JSON blobs", () => {
+		const MyTable = Table("my_table", (prop) => ({
+			tags: prop.text().array(),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string; mode: string }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+		expect(columns.tags.dataType).toBe("json");
+	});
+
 	test("should handle enums with mapping", () => {
 		const MyTable = Table("my_table", (prop) => ({
 			id: prop.integer(),
@@ -119,5 +133,42 @@ describe("Table", () => {
 				bad: new (prop.text().constructor)("invalid"),
 			}));
 		}).toThrow();
+	});
+
+	test("should handle array fields for different types", () => {
+		const MyTable = Table("my_table", (prop) => ({
+			tags: prop.text().array(),
+			ids: prop.integer().array(),
+			flags: prop.boolean().array(),
+			nodes: prop.node().array(),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<string, { dataType: string }>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+		expect(columns.tags.dataType).toBe("json");
+		expect(columns.ids.dataType).toBe("json");
+		expect(columns.flags.dataType).toBe("json");
+		expect(columns.nodes.dataType).toBe("json");
+	});
+
+	test("should handle enum mapping from driver", () => {
+		const MyTable = Table("enum_map_test", (prop) => ({
+			status: prop.enum({ options: ["active", "inactive"] }),
+		}));
+
+		const columns = (
+			MyTable as unknown as {
+				[key: symbol]: Record<
+					string,
+					{ mapFromDriverValue: (v: unknown) => unknown }
+				>;
+			}
+		)[Symbol.for("drizzle:Columns")];
+
+		expect(columns.status.mapFromDriverValue(0)).toBe("active");
+		expect(columns.status.mapFromDriverValue(1)).toBe("inactive");
 	});
 });
